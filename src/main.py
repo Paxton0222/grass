@@ -119,8 +119,7 @@ except (WebDriverException, NoSuchDriverException) as e:
 #driver.get('chrome-extension://'+extensionId+'/index.html')
 # print('Started! Logging in...')
 driver.get('https://app.getgrass.io/')
-driver.execute_script(f"window.localStorage.setItem('refreshToken','{REFRESH_TOKEN}');")
-driver.execute_script(f"window.localStorage.setItem('accessToken','{ACCESS_TOKEN}');")
+driver.execute_script(f"window.localStorage.setItem('refreshToken','{REFRESH_TOKEN}');window.localStorage.setItem('accessToken','{ACCESS_TOKEN}');")
 
 # sleep = 0
 # while True:
@@ -185,46 +184,46 @@ driver.execute_script(f"window.localStorage.setItem('accessToken','{ACCESS_TOKEN
 #             exit()
 
 # print('Connected! Starting API...')
-driver.get('https://app.getgrass.io/dashboard')
+# driver.get('https://app.getgrass.io/dashboard')
 #flask api
 app = Flask(__name__)
 
-@app.route('/')
-def get():
-    generate_error_report(driver)
-    try:
-        network_quality = driver.find_element('xpath', '//*[contains(text(), "Network quality")]').text
-        network_quality = re.findall(r'\d+', network_quality)[0]
-    except:
-        network_quality = False
-        print('Could not get network quality!')
-        generate_error_report(driver)
+# @app.route('/')
+# def get():
+#     generate_error_report(driver)
+#     try:
+#         network_quality = driver.find_element('xpath', '//*[contains(text(), "Network quality")]').text
+#         network_quality = re.findall(r'\d+', network_quality)[0]
+#     except:
+#         network_quality = False
+#         print('Could not get network quality!')
+#         generate_error_report(driver)
 
-    try:
-        token = driver.find_element('xpath', '//*[@alt="token"]')
-        token = token.find_element('xpath', 'following-sibling::div')
-        epoch_earnings = token.text
-    except Exception as e:
-        epoch_earnings = False
-        print('Could not get earnings!')
-        generate_error_report(driver)
+#     try:
+#         token = driver.find_element('xpath', '//*[@alt="token"]')
+#         token = token.find_element('xpath', 'following-sibling::div')
+#         epoch_earnings = token.text
+#     except Exception as e:
+#         epoch_earnings = False
+#         print('Could not get earnings!')
+#         generate_error_report(driver)
     
-    try:
-        #find all chakra-badge
-        badges = driver.find_elements('xpath', '//*[contains(@class, "chakra-badge")]')
-        #find the one with chakra-text that contains either "Connected" or "Disconnected"
-        connected = False
-        for badge in badges:
-            text = badge.find_element('xpath', 'child::div//p').text
-            if 'Connected' in text:
-                connected = True
-                break
-    except:
-        connected = False
-        print('Could not get connection status!')
-        generate_error_report(driver)
+#     try:
+#         #find all chakra-badge
+#         badges = driver.find_elements('xpath', '//*[contains(@class, "chakra-badge")]')
+#         #find the one with chakra-text that contains either "Connected" or "Disconnected"
+#         connected = False
+#         for badge in badges:
+#             text = badge.find_element('xpath', 'child::div//p').text
+#             if 'Connected' in text:
+#                 connected = True
+#                 break
+#     except:
+#         connected = False
+#         print('Could not get connection status!')
+#         generate_error_report(driver)
 
-    return {'connected': connected, 'network_quality': network_quality, 'epoch_earnings': epoch_earnings}
+#     return {'connected': connected, 'network_quality': network_quality, 'epoch_earnings': epoch_earnings}
 
 @app.get('/token')
 def token():
