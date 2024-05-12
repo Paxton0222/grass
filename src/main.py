@@ -20,11 +20,16 @@ CRX_URL = "https://clients2.google.com/service/update2/crx?response=redirect&pro
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
 
 try:
-    USER = os.environ['GRASS_USER']
-    PASSW = os.environ['GRASS_PASS']
+    # USER = os.environ['GRASS_USER']
+    # PASSW = os.environ['GRASS_PASS']
+    REFRESH_TOKEN = os.environ["REFRESH_TOKEN"]
+    ACCESS_TOKEN = os.environ["ACCESS_TOKEN"]
 except:
-    USER = ''
-    PASSW = ''
+    # USER = ''
+    # PASSW = ''
+    REFRESH_TOKEN = ''
+    ACCESS_TOKEN = ''
+
 
 try:
     ALLOW_DEBUG = os.environ['ALLOW_DEBUG']
@@ -35,13 +40,19 @@ try:
 except:
     ALLOW_DEBUG = False
 
-# are they set?
-if USER == '' or PASSW == '':
-    print('Please set GRASS_USER and GRASS_PASS env variables')
+# # are they set?
+# if USER == '' or PASSW == '':
+#     print('Please set GRASS_USER and GRASS_PASS env variables')
+#     exit()
+if REFRESH_TOKEN == '' or ACCESS_TOKEN == '':
+    print("token not set")
     exit()
 
 if ALLOW_DEBUG == True:
     print('Debugging is enabled! This will generate a screenshot and console logs on error!')
+
+REFRESH_TOKEN = '"' + REFRESH_TOKEN + '"'
+ACCESS_TOKEN = '"' + ACCESS_TOKEN + '"'
 
 
 #https://gist.github.com/ckuethe/fb6d972ecfc590c2f9b8
@@ -71,11 +82,11 @@ def generate_error_report(driver):
             f.write(str(log))
             f.write('\n')
 
-    url = 'https://imagebin.ca/upload.php'
-    files = {'file': ('error.png', open('error.png', 'rb'), 'image/png')}
-    response = requests.post(url, files=files)
-    print(response.text)
-    print('Error report generated! Provide the above information to the developer for debugging purposes.')
+    # url = 'https://imagebin.ca/upload.php'
+    # files = {'file': ('error.png', open('error.png', 'rb'), 'image/png')}
+    # response = requests.post(url, files=files)
+    # print(response.text)
+    # print('Error report generated! Provide the above information to the developer for debugging purposes.')
 
 print('Downloading extension...')
 download_extension(extensionId)
@@ -86,6 +97,8 @@ options = webdriver.ChromeOptions()
 options.add_argument("--headless=new")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument('--no-sandbox')
+options.add_argument('--start-maximized');
+options.add_argument('--start-fullscreen');
 
 options.add_extension('grass.crx')
 
@@ -102,78 +115,83 @@ except (WebDriverException, NoSuchDriverException) as e:
         print('Could not start with manual path! Exiting...')
         exit()
 
+
 #driver.get('chrome-extension://'+extensionId+'/index.html')
-print('Started! Logging in...')
+# print('Started! Logging in...')
 driver.get('https://app.getgrass.io/')
+driver.execute_script(f"window.localStorage.setItem('refreshToken','{REFRESH_TOKEN}');")
+driver.execute_script(f"window.localStorage.setItem('accessToken','{ACCESS_TOKEN}');")
 
-sleep = 0
-while True:
-    try:
-        driver.find_element('xpath', '//*[@name="user"]')
-        driver.find_element('xpath', '//*[@name="password"]')
-        driver.find_element('xpath', '//*[@type="submit"]')
-        break
-    except:
-        time.sleep(1)
-        print('Loading login form...')
-        sleep += 1
-        if sleep > 15:
-            print('Could not load login form! Exiting...')
-            generate_error_report(driver)
-            driver.quit()
-            exit()
+# sleep = 0
+# while True:
+#     try:
+#         driver.find_element('xpath', '//*[@name="user"]')
+#         driver.find_element('xpath', '//*[@name="password"]')
+#         driver.find_element('xpath', '//*[@type="submit"]')
+#         break
+#     except:
+#         time.sleep(1)
+#         print('Loading login form...')
+#         sleep += 1
+#         if sleep > 15:
+#             print('Could not load login form! Exiting...')
+#             generate_error_report(driver)
+#             driver.quit()
+#             exit()
 
-#find name="user"
-user = driver.find_element('xpath', '//*[@name="user"]')
-passw = driver.find_element('xpath', '//*[@name="password"]')
-submit = driver.find_element('xpath', '//*[@type="submit"]')
+# #find name="user"
+# user = driver.find_element('xpath', '//*[@name="user"]')
+# passw = driver.find_element('xpath', '//*[@name="password"]')
+# submit = driver.find_element('xpath', '//*[@type="submit"]')
 
-#get user from env
-user.send_keys(USER)
-passw.send_keys(PASSW)
-submit.click()
+# #get user from env
+# user.send_keys(USER)
+# passw.send_keys(PASSW)
+# submit.click()
 
-#id="chakra-toast-manager-top-right" is the toast
+# #id="chakra-toast-manager-top-right" is the toast
 
 
-sleep = 0
-while True:
-    try:
-        e = driver.find_element('xpath', '//*[contains(text(), "Dashboard")]')
-        break
-    except:
-        time.sleep(1)
-        print('Logging in...')
-        sleep += 1
-        if sleep > 30:
-            print('Could not login! Double Check your username and password! Exiting...')
-            generate_error_report(driver)
-            driver.quit()
-            exit()
+# sleep = 0
+# while True:
+#     try:
+#         e = driver.find_element('xpath', '//*[contains(text(), "Dashboard")]')
+#         break
+#     except:
+#         time.sleep(1)
+#         print('Logging in...')
+#         sleep += 1
+#         if sleep > 30:
+#             print('Could not login! Double Check your username and password! Exiting...')
+#             generate_error_report(driver)
+#             driver.quit()
+#             exit()
 
-print('Logged in! Waiting for connection...')
-driver.get('chrome-extension://'+extensionId+'/index.html')
-sleep = 0
-while True:
-    try:
-        driver.find_element('xpath', '//*[contains(text(), "Open dashboard")]')
-        break
-    except:
-        time.sleep(1)
-        print('Loading connection...')
-        sleep += 1
-        if sleep > 30:
-            print('Could not load connection! Exiting...')
-            generate_error_report(driver)
-            driver.quit()
-            exit()
+# print('Logged in! Waiting for connection...')
+# driver.get('chrome-extension://'+extensionId+'/index.html')
+# sleep = 0
+# while True:
+#     try:
+#         driver.find_element('xpath', '//*[contains(text(), "Open dashboard")]')
+#         break
+#     except:
+#         time.sleep(1)
+#         print('Loading connection...')
+#         sleep += 1
+#         if sleep > 30:
+#             print('Could not load connection! Exiting...')
+#             generate_error_report(driver)
+#             driver.quit()
+#             exit()
 
-print('Connected! Starting API...')
+# print('Connected! Starting API...')
+driver.get('https://app.getgrass.io/dashboard')
 #flask api
 app = Flask(__name__)
 
 @app.route('/')
 def get():
+    generate_error_report(driver)
     try:
         network_quality = driver.find_element('xpath', '//*[contains(text(), "Network quality")]').text
         network_quality = re.findall(r'\d+', network_quality)[0]
@@ -208,6 +226,12 @@ def get():
 
     return {'connected': connected, 'network_quality': network_quality, 'epoch_earnings': epoch_earnings}
 
+@app.get('/token')
+def token():
+    return {
+        'refreshToken': REFRESH_TOKEN,
+        'accessToken': ACCESS_TOKEN
+    }
 
 app.run(host='0.0.0.0',port=80, debug=False)
 driver.quit()

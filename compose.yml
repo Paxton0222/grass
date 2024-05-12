@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  grass:
+    build: .
+    container_name: Grass
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/usr/src/app
+    environment:
+      REFRESH_TOKEN: ''
+      ACCESS_TOKEN: ''
+      ALLOW_DEBUG: "True"
+    restart: always
